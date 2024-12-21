@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<script src="//cdn.jsdelivr.net/npm/phaser@3.17.0/dist/phaser.js"></script>
+<style>
+body {
+  margin: 0;
+}
+</style>
+<script>
+var mainScene = new Phaser.Scene();
+
+mainScene.preload = function() {
+  this.load.image('sea', 'assets/images/sea.jpg');
+  // キャノン画像の読み込み
+  this.load.image('plane', 'assets/images/plane.png');
+  // ミサイル画像の読み込み
+  this.load.image('beam', 'assets/images/beam.png');
+  // 敵画像の読み込み
+  this.load.image('alian', 'assets/images/alian.png');
+  // 爆弾画像の読み込み
+  this.load.image('laser', 'assets/images/laser.png');
+  
+};
+
+mainScene.create = function() {
+  // 背景色の設定
+  this.cameras.main.setBackgroundColor('#99CCFF');
+
+  // 地面作成（物理エンジン対象ではなく、背景となる地面）
+  this.createGround();
+  
+  // キャノンの作成
+  this.createPlane();
+  
+  // スペースキーでミサイル発射
+  this.input.keyboard.on('keydown-SPACE', function(event) {
+    this.createBeam();
+  }, this);
+  
+  // ゲームオーバーを表す変数。初期値は「false」
+  this.isGameOver = false;
+  
+  // ミサイルグループの作成
+  this.createBeamGroup();
+  
+  // 敵UFOの作成
+  this.createAlian();
+  
+  // 敵爆弾グループの作成
+  this.createLaserGroup();
+  
+};
+
+mainScene.update = function() {
+  // ゲームオーバーなら「update」を実行しない
+  if( this.isGameOver ) {
+    return false;
+  }
+
+  this.sea.tilePositionY -= 1;
+  
+  var speed = 600;
+  
+  var cursors = this.input.keyboard.createCursorKeys();
+  if(cursors.right.isDown) {
+    // 右に移動
+    this.plane.setVelocityX(speed);
+  } else if(cursors.left.isDown) {
+    // 左に移動
+    this.plane.setVelocityX(-speed);
+  } else {
+    // 移動停止
+    this.plane.setVelocityX(0);
+  }
+  
+  // 敵となるUFOが画面上部を左右に移動する
+  if (this.alian.x < 100) {
+    this.alian.dx = -this.alian.dx;
+  }
+  if (this.alian.x > 700) {
+    this.alian.dx = -this.alian.dx;
+  }
+  this.alian.x += this.alian.dx;
+  
+};
+
+mainScene.createGround = function() {
+  // 物理エンジンではなく背景としての地面を作成
+  this.sea = this.add.tileSprite(0,0, 800, 600, 'sea');
+  this.sea.setOrigin(0, 0);
+
+};
+
+mainScene.createPlane = function() {
+  // キャノンを作成する
+  this.plane = this.physics.add.image(400, 575, 'plane');
+  this.plane.setDisplaySize(70, 70);
+  this.plane.setCollideWorldBounds(true);
+};
+
+mainScene.createBeamGroup = function() {
+  // ミサイルグループを作成する
+  this.beamGroup = this.physics.add.group();
+};
+
+mainScene.createBeam = function() {
+  // キャノンが発射するミサイルを作成する
+  var x = this.plane.body.center.x;
+  var y = this.plane.body.center.y;
+  
+  var beam = this.beamGroup.create(x, y, 'beam');
+  beam.setDisplaySize(30, 30);
+  var speed = 700;
+  beam.setVelocityY(-speed);
+  beam.body.setAllowGravity(false);
+};
+
+mainScene.createAlian = function() {
+  // 敵となるUFOを作成する
+  this.alian = this.physics.add.image(400, 80, 'alian');
+  this.alian.setDisplaySize(150, 150);
+  this.alian.body.setAllowGravity(false);
+  this.alian.hp = 10;
+  this.alian.dx = 5;
+  // 文字の表示
+  this.bossText = this.add.text(650, 30, "HP:"+this.alian.hp , {
+      font: '40px Open Sans',
+      fill: '#ff0000'
+  });      
+  this.physics.add.overlap(this.alian, this.beamGroup, this.hitAlian, null, this);
+  
+};
+
+mainScene.createLaserGroup = function() {
+  // 爆弾グループを作成する
+  this.laserGroup = this.physics.add.group();
+  
+  this.physics.add.overlap(this.plane, this.laserGroup, this.hitPlane, null, this);  
+  this.physics.add.overlap(this.laserGroup, this.beamGroup, this.hitLaser, null, this);  
+  
+  this.laserTimer = this.time.addEvent({
+    delay : 500,
+    callback : this.createLaser,
+    loop : true,
+    callbackScope : this
+  });  
+};
+
+mainScene.createLaser = function() {
+  // UFOの位置に爆弾を作成する
+  var x = this.alian.body.center.x;
+  var y = this.alian.body.center.y;
+  
+  var laser = this.laserGroup.create(x, y, 'laser');
+  laser.setDisplaySize(70, 70);
+  laser.setAngle(180);
+  laser.body.setAllowGravity(false);
+  laser.setVelocityY(300);
+};
+
+mainScene.hitPlane = function(plane, laser) {
+  // キャノンに爆弾が衝突したのでゲームオーバー
+  this.gameOver();
+  
+};
+
+mainScene.hitLaser = function(laser, beam) {
+  // 爆弾とミサイルが衝突したので両方を削除
+  laser.destroy();
+  beam.destroy();
+  
+};
+
+mainScene.hitAlian = function(alian, beam) {
+  // UFOにミサイルが衝突したときの処理
+  beam.destroy();
+  alian.hp--;
+  var text = "HP:" + alian.hp;
+  
+  if (alian.hp < 0) {
+    this.gameClear();
+  } else {
+    this.bossText.setText(text);
+  }
+  
+};
+
+mainScene.gameOver = function() {
+  /*
+   * ゲームオーバーの処理
+   * キャノンに爆弾が衝突した
+   */
+  // ゲームオーバーの変数を「true」
+  this.isGameOver = true;
+  // 物理エンジン停止
+  this.physics.pause();
+  // キャノンを赤色にする
+  this.plane.setTint(0xff0000);
+  // 爆弾作成のタイマーを停止
+  this.laserTimer.remove();
+};
+
+mainScene.gameClear = function() {
+  /*
+   * ゲームクリアの処理
+   * UFOのHPが「0」になった
+   */
+  // UFOを赤色にする
+  this.alian.setTint(0xA52A2A);
+  // 爆弾作成のタイマーを停止
+  this.laserTimer.remove();
+  
+  // 1秒後にUFOを削除するタイマー処理
+  this.time.addEvent({
+    delay : 1000,
+    callback : this.destroyAlian,
+    loop : false,
+    callbackScope : this,
+  });
+};
+
+mainScene.destroyAlian = function() {
+  this.alian.destroy();
+};
+
+var config = {
+  type: Phaser.AUTO,
+  width: 800,
+  height: 600,
+  physics: {
+    default: 'arcade',
+    arcade: {
+      gravity: { y: 300 },
+      debug: true,
+    }
+  },
+  scene: [mainScene],
+};
+var game = new Phaser.Game(config);
+</script>
+</head>
+<body>
+</body>
+</html>
