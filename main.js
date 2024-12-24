@@ -178,6 +178,7 @@ mainScene.gameOver = function() {
   // レーザー作成のタイマーを停止
   this.laserTimer.remove();
   
+  // ボタンをおして、スタート画面へ戻る
   this.input.keyboard.on('keydown',function(event){
     this.scene.start("startScene");
   },this);  
@@ -205,6 +206,7 @@ mainScene.gameClear = function() {
 mainScene.destroyAlian = function() {
   this.alian.destroy();
   
+  // ボタンをおして、スタート画面へ戻る
   this.input.keyboard.on('keydown',function(event){
     this.scene.start("startScene");
   },this);  
