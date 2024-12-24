@@ -1,28 +1,4 @@
-<!doctype html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<script src="//cdn.jsdelivr.net/npm/phaser@3.17.0/dist/phaser.js"></script>
-<style>
-body {
-  margin: 0;
-}
-</style>
-<script>
-var mainScene = new Phaser.Scene();
-
-mainScene.preload = function() {
-  this.load.image('sea', 'assets/images/sea.jpg');
-  // 飛行機画像の読み込み
-  this.load.image('plane', 'assets/images/plane.png');
-  // ビーム画像の読み込み
-  this.load.image('beam', 'assets/images/beam.png');
-  // エイリアン画像の読み込み
-  this.load.image('alian', 'assets/images/alian.png');
-  // レーザー画像の読み込み
-  this.load.image('laser', 'assets/images/laser.png');
-  
-};
+var mainScene = new Phaser.Scene("mainScene");
 
 mainScene.create = function() {
   // 背景色の設定
@@ -201,6 +177,10 @@ mainScene.gameOver = function() {
   this.plane.setTint(0xff0000);
   // レーザー作成のタイマーを停止
   this.laserTimer.remove();
+  
+  this.input.keyboard.on('keydown',function(event){
+    this.scene.start("startScene");
+  },this);  
 };
 
 mainScene.gameClear = function() {
@@ -224,24 +204,9 @@ mainScene.gameClear = function() {
 
 mainScene.destroyAlian = function() {
   this.alian.destroy();
+  
+  this.input.keyboard.on('keydown',function(event){
+    this.scene.start("startScene");
+  },this);  
+  
 };
-
-var config = {
-  type: Phaser.AUTO,
-  width: 800,
-  height: 600,
-  physics: {
-    default: 'arcade',
-    arcade: {
-      gravity: { y: 300 },
-      debug: true,
-    }
-  },
-  scene: [mainScene],
-};
-var game = new Phaser.Game(config);
-</script>
-</head>
-<body>
-</body>
-</html>
