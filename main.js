@@ -156,10 +156,11 @@ mainScene.hitAlian = function(alian, beam) {
   alian.hp--;
   var text = "HP:" + alian.hp;
   
-  if (alian.hp < 0) {
-    this.gameClear();
-  } else {
+  if (alian.hp >= 0) {
     this.bossText.setText(text);
+  }
+  if (alian.hp <= 0) {
+    this.gameClear();
   }
   
 };
@@ -171,6 +172,10 @@ mainScene.gameOver = function() {
    */
   // ゲームオーバーの変数を「true」
   this.isGameOver = true;
+  // ゲームオーバー画像を表示
+  this.gameover = this.add.image(400, 300, 'gameover');
+  this.gameover.setDisplaySize(500,500);
+  
   // 物理エンジン停止
   this.physics.pause();
   // 飛行機を赤色にする
