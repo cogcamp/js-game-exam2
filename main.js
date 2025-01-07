@@ -17,7 +17,7 @@ mainScene.create = function() {
   this.isGameOver = false;
   
   // ビームグループの作成
-
+  
 
   // 敵エイリアンの作成
 
@@ -133,6 +133,10 @@ mainScene.gameOver = function() {
    */
   // ゲームオーバーの変数を「true」
   this.isGameOver = true;
+  // ゲームオーバー画像を表示
+  this.gameover = this.add.image(400, 300, 'gameover');
+  this.gameover.setDisplaySize(500,500);
+  
   // 物理エンジン停止
   this.physics.pause();
   // 飛行機を赤色にする
