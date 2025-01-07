@@ -89,8 +89,7 @@ mainScene.createBeam = function() {
   
   var beam = this.beamGroup.create(x, y, 'beam');
   beam.setDisplaySize(30, 30);
-  var speed = 700;
-  beam.setVelocityY(-speed);
+  beam.setVelocityY(-700);
   beam.body.setAllowGravity(false);
 };
 
